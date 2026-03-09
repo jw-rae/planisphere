@@ -1,0 +1,630 @@
+/* ───────────────────────────────────────────────
+   Planisphere — Application Layout
+   Uses @jwrae/design-tokens CSS custom properties.
+   No hardcoded colors, spacing, or radius values.
+─────────────────────────────────────────────── */
+
+/* ── Local token aliases (fills gaps in @jwrae/design-tokens) ── */
+:root {
+    --color-accent: var(--color-brand-primary-500);
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    height: 100dvh;
+    overflow: hidden;
+}
+
+body {
+    height: 100dvh;
+    overflow: hidden;
+    background: #03070f;
+    /* match sky — no visible gap between sky and body */
+    color: var(--color-text-primary);
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+}
+
+/* ── Two-Panel Layout: sky fills everything, controls overlay on top ── */
+.app-layout {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* Collapse transition: panel slides off-screen to the right */
+.app-layout.panel-collapsed .controls-panel {
+    transform: translateX(100%);
+}
+
+@media (max-width: 768px) {
+    .controls-panel {
+        width: 100% !important;
+        right: 0;
+        left: 0;
+        top: auto;
+        bottom: 0;
+        height: auto;
+        max-height: 60dvh;
+        transform: none !important;
+    }
+
+    .app-layout.panel-collapsed .controls-panel {
+        transform: translateY(100%) !important;
+    }
+
+    .panel-toggle-btn {
+        left: auto;
+        right: var(--space-sm);
+        top: -44px;
+        border-right: 1px solid var(--color-border-primary);
+        border-radius: var(--border-radius-base);
+    }
+}
+
+/* ── Sky Panel ── */
+.sky-panel {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+    /* clips the star field cleanly at the edge */
+    display: flex;
+    align-items: stretch;
+}
+
+.sky-container {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+/* Full-bleed in ALL modes — sphere mode uses an HTML overlay for the circle mask */
+.planisphere-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* ── Sphere overlay: a fixed-size circle that masks the area outside it.
+   Visible only in sphere (planisphere) mode. Hidden in map mode.
+   z-index sits above the SVG but below the controls panel. ── */
+#sphere-overlay {
+    display: none;
+    /* map mode default: invisible */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(88dvh, 88dvw);
+    height: min(88dvh, 88dvw);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    /* Ring border */
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    /* Box-shadow floods everything OUTSIDE the circle with the sky background colour */
+    box-shadow: 0 0 0 3000px #03070f;
+}
+
+.sky-panel--planisphere #sphere-overlay {
+    display: block;
+}
+
+/* SVG layer defaults */
+.sky-layer {
+    pointer-events: none;
+}
+
+/* Star circles: r is a CSS property (SVG 2) so we can use calc() + --zoom-k
+   to counter-scale radius as the user zooms, keeping physical dot size constant. */
+#layer-stars circle {
+    r: calc(var(--star-r, 1px) / var(--zoom-k, 1));
+}
+
+/* ── Controls Panel ── */
+/* ── Controls Panel ── */
+.controls-panel {
+    /* Float on top of the sky map — does not shrink the star field */
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100dvh;
+    width: 320px;
+    z-index: 20;
+    /* overflow visible so the toggle-tab can peek out to the left */
+    overflow: visible;
+    transition: transform 0.25s ease;
+    /* Subtle shadow so panel reads above the sky */
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.6);
+}
+
+.controls-card {
+    background: var(--color-surface-primary);
+    border-left: 1px solid var(--color-border-primary);
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    height: 100dvh;
+    width: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+}
+
+/* ── Panel Header ── */
+.panel-header {
+    border-bottom: 1px solid var(--color-border-primary);
+    padding-bottom: var(--space-xs);
+    padding-top: var(--space-xs);
+    flex-shrink: 0;
+}
+
+.panel-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    letter-spacing: var(--letter-spacing-tight);
+}
+
+.panel-subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+/* ── Control Sections ── */
+.control-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.control-label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.control-row--spread {
+    justify-content: space-between;
+}
+
+/* ── Inputs ── */
+.control-input {
+    flex: 1;
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--border-radius-base);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+    padding: var(--space-xs) var(--space-sm);
+    appearance: none;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.control-input:focus-visible {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-subtle, rgba(99, 102, 241, 0.25));
+}
+
+/* ── Buttons ── */
+.btn-secondary {
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--border-radius-base);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    padding: var(--space-xs) var(--space-md);
+    transition: background 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-secondary:hover {
+    background: var(--color-surface-elevated);
+    border-color: var(--color-accent);
+}
+
+.btn-secondary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* ── Time Display ── */
+.time-display {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--letter-spacing-tight);
+}
+
+/* ── Slider ── */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: var(--border-radius-full, 9999px);
+    background: var(--color-border-primary);
+    outline: none;
+    cursor: pointer;
+    accent-color: var(--color-accent);
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    cursor: pointer;
+    border: 2px solid var(--color-surface-primary);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.1s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.slider:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+}
+
+.slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary, var(--color-text-secondary));
+}
+
+/* ── Toggle Switch ── */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.toggle-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    cursor: pointer;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background: var(--color-border-primary);
+    border: none;
+    border-radius: var(--border-radius-full, 9999px);
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background 0.2s ease;
+    outline: none;
+}
+
+.toggle-switch[aria-checked="true"] {
+    background: var(--color-accent);
+}
+
+.toggle-switch:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: var(--color-surface-primary);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease;
+    pointer-events: none;
+}
+
+.toggle-switch[aria-checked="true"] .toggle-thumb {
+    transform: translateX(18px);
+}
+
+/* ── Helper Text ── */
+.helper-text {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+/* ═══════════════════════════════════════════════
+   SVG Sky Rendering Styles
+   All planisphere SVG elements use these classes.
+═══════════════════════════════════════════════ */
+
+/* ── Sky background disk ── */
+.sky-disk {
+    fill: #03070f;
+}
+
+/* ── Constellation lines ── */
+.constellation-line {
+    fill: none;
+    stroke: var(--color-neutral-600);
+    stroke-width: 0.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.6;
+}
+
+/* ── Constellation name labels ── */
+.const-label {
+    fill: var(--color-neutral-200);
+    font-family: var(--font-family-sans);
+    font-size: calc(9px / var(--zoom-k, 1));
+    font-weight: var(--font-weight-normal);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.7;
+}
+
+.const-label[data-rank="1"] {
+    fill: var(--color-neutral-100);
+    font-size: calc(11px / var(--zoom-k, 1));
+    opacity: 0.85;
+}
+
+/* Progressive constellation label tiers — toggled by mapZoom */
+.const-label-tier--hidden {
+    display: none;
+}
+
+/* ── Star labels (proper names) ── */
+.star-label {
+    fill: var(--color-neutral-300);
+    font-family: var(--font-family-sans);
+    /* font-size is in SVG user units; dividing by --zoom-k keeps screen size constant */
+    font-size: calc(9px / var(--zoom-k, 1));
+    font-weight: var(--font-weight-normal);
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Progressive label tiers — toggled by mapZoom based on current zoom level */
+.label-tier--hidden {
+    display: none;
+}
+
+/* ── Horizon ring ── */
+.horizon-ring {
+    fill: none;
+    stroke: var(--color-neutral-600);
+    stroke-width: 1.5;
+}
+
+/* ── Cardinal direction labels (N / E / S / W) ── */
+.cardinal-label {
+    fill: var(--color-neutral-400);
+    font-family: var(--font-family-sans);
+    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ── Zenith label ── */
+.zenith-label {
+    fill: var(--color-neutral-600);
+    font-family: var(--font-family-sans);
+    font-size: 7px;
+    font-weight: var(--font-weight-normal);
+    letter-spacing: var(--letter-spacing-wider);
+    text-anchor: middle;
+    dominant-baseline: auto;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ── Zenith crosshair dot ── */
+.zenith-dot {
+    fill: var(--color-neutral-600);
+}
+
+/* ── Select inputs ── */
+.control-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-sm) center;
+    padding-right: var(--space-xl);
+}
+
+.control-select--day {
+    max-width: 4.5rem;
+}
+
+/* ── Manual latitude row ── */
+.manual-lat-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding-top: var(--space-xs);
+}
+
+.lat-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-accent);
+}
+
+/* ── Utility: hidden ── */
+.hidden {
+    display: none !important;
+}
+
+/* ── Panel toggle tab — attached to the left edge of the controls panel ── */
+.panel-toggle-btn {
+    position: absolute;
+    left: -22px;
+    top: var(--space-lg, 24px);
+    z-index: 50;
+    width: 22px;
+    height: 48px;
+    background: var(--color-surface-primary);
+    border: 1px solid var(--color-border-primary);
+    border-right: none;
+    border-radius: var(--border-radius-base) 0 0 var(--border-radius-base);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.panel-toggle-btn:hover {
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
+}
+
+.panel-toggle-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+}
+
+/* When panel is collapsed the tab peeks in from the right edge with a full border */
+.app-layout.panel-collapsed .panel-toggle-btn {
+    border-right: 1px solid var(--color-border-primary);
+    border-radius: var(--border-radius-base);
+}
+
+
+/* Panel header — flex row with title + toggle */
+.panel-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+/* Two-button toggle group (◎ / ⊞) */
+.view-toggle {
+    display: flex;
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--border-radius-base);
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.view-btn {
+    background: var(--color-surface-secondary);
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: var(--space-xs) var(--space-sm);
+    transition: background 0.15s ease, color 0.15s ease;
+    outline: none;
+}
+
+.view-btn:first-child {
+    border-right: 1px solid var(--color-border-primary);
+}
+
+.view-btn:hover {
+    background: var(--color-surface-elevated);
+    color: var(--color-text-primary);
+}
+
+.view-btn--active {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.view-btn--active:hover {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.view-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+}
+
+/* ═══════════════════════════════════════════════
+   Map Mode (default in full-screen view)
+═══════════════════════════════════════════════ */
+
+/* Cursor cues for pan/zoom */
+.svg--pannable {
+    cursor: grab;
+}
+
+.svg--pannable:active {
+    cursor: grabbing;
+}
+
+/* ── Floating controls overlay (Reset View button) ── */
+.map-controls-overlay {
+    position: absolute;
+    bottom: var(--space-md);
+    left: var(--space-md);
+    z-index: 10;
+    display: flex;
+    gap: var(--space-xs);
+    pointer-events: none;
+}
+
+.map-controls-overlay>* {
+    pointer-events: all;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+}

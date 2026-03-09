@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default" data-color-scheme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planisphere — Nostalgic Sky Toy</title>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- ── Sky Visualization Panel ── -->
+        <main class="sky-panel" aria-label="Planisphere sky view">
+            <!-- Floating map controls (visible in map mode only) -->
+            <div id="map-controls-overlay" class="map-controls-overlay hidden">
+                <button id="reset-view-btn" class="btn-secondary btn-icon" type="button"
+                    title="Reset view to home position" aria-label="Reset map to home position">
+                    ⌖ Reset
+                </button>
+            </div>
+            <!-- Sphere-mode overlay: fixed circular mask + ring, hidden in map mode -->
+            <div id="sphere-overlay" aria-hidden="true"></div>
+            <div class="sky-container">
+                <svg id="planisphere-svg" class="planisphere-svg" aria-label="Interactive star map" role="img">
+                    <defs>
+                        <clipPath id="horizon-clip">
+                            <circle id="horizon-clip-circle" cx="0" cy="0" r="300" />
+                        </clipPath>
+                    </defs>
+
+                    <!-- Layers rendered by TypeScript -->
+                    <g id="layer-root">
+                        <g id="layer-bg" class="sky-layer"></g>
+                        <g id="layer-constellation" class="sky-layer" clip-path="url(#horizon-clip)"></g>
+                        <g id="layer-const-labels" class="sky-layer" clip-path="url(#horizon-clip)"></g>
+                        <g id="layer-stars" class="sky-layer" clip-path="url(#horizon-clip)"></g>
+                        <g id="layer-labels" class="sky-layer" clip-path="url(#horizon-clip)"></g>
+                        <g id="layer-horizon" class="sky-layer"></g>
+                    </g>
+                </svg>
+            </div>
+        </main>
+
+        <!-- ── Controls Panel (overlays the sky map) ── -->
+        <aside class="controls-panel" id="controls-panel" aria-label="Planisphere controls">
+            <!-- Toggle tab lives on the left edge of the panel so it slides with it -->
+            <button id="panel-toggle-btn" class="panel-toggle-btn" type="button" aria-label="Toggle controls panel"
+                title="Toggle controls">
+                ›
+            </button>
+            <div class="controls-card">
+
+                <!-- Header -->
+                <header class="panel-header">
+                    <div class="panel-header-top">
+                        <div>
+                            <h1 class="panel-title">Planisphere</h1>
+                            <p class="panel-subtitle">Rotate to explore the night sky</p>
+                        </div>
+                        <!-- View mode toggle -->
+                        <div class="view-toggle" role="group" aria-label="View mode">
+                            <button id="view-planisphere-btn" class="view-btn view-btn--active" type="button"
+                                aria-pressed="true" title="Planisphere view — original horizon circle">
+                                ◎
+                            </button>
+                            <button id="view-map-btn" class="view-btn" type="button" aria-pressed="false"
+                                title="Map view — full-screen zoomable sky map">
+                                ⊞
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Date -->
+                <section class="control-section" aria-labelledby="date-label">
+                    <label id="date-label" class="control-label">Date</label>
+                    <div class="control-row">
+                        <select id="month-select" class="control-input control-select" aria-label="Month">
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <select id="day-select" class="control-input control-select control-select--day"
+                            aria-label="Day">
+                        </select>
+                        <button id="now-btn" class="btn-secondary" type="button"
+                            aria-label="Jump to current date and time">Now</button>
+                    </div>
+                    <p class="helper-text muted">Year has no meaningful effect on a planisphere.</p>
+                </section>
+
+                <!-- Time -->
+                <section class="control-section" aria-labelledby="time-label">
+                    <div class="control-row control-row--spread">
+                        <label id="time-label" class="control-label">Time</label>
+                        <output id="time-display" class="time-display" aria-live="polite">00:00</output>
+                    </div>
+                    <input id="time-slider" type="range" class="slider" min="0" max="1440" step="1" value="720"
+                        aria-label="Time of day in minutes" aria-valuemin="0" aria-valuemax="1440" />
+                    <div class="slider-ticks" aria-hidden="true">
+                        <span>00:00</span>
+                        <span>06:00</span>
+                        <span>12:00</span>
+                        <span>18:00</span>
+                        <span>24:00</span>
+                    </div>
+                </section>
+
+                <!-- Location -->
+                <section class="control-section" aria-labelledby="location-label">
+                    <span id="location-label" class="control-label">Location</span>
+
+                    <div class="toggle-row">
+                        <label class="toggle-label" for="auto-locate-toggle">Auto-detect</label>
+                        <button id="auto-locate-toggle" role="switch" aria-checked="false"
+                            aria-label="Toggle automatic location detection" class="toggle-switch" type="button">
+                            <span class="toggle-thumb" aria-hidden="true"></span>
+                        </button>
+                    </div>
+
+                    <!-- Manual latitude — visible when auto-detect is off -->
+                    <div id="manual-lat-row" class="manual-lat-row">
+                        <div class="control-row control-row--spread">
+                            <label for="lat-slider" class="helper-text">Manual latitude</label>
+                            <output id="lat-output" class="helper-text lat-value" aria-live="polite">40.0° N</output>
+                        </div>
+                        <input id="lat-slider" type="range" class="slider" min="-90" max="90" step="0.5" value="40"
+                            aria-label="Observer latitude" />
+                        <div class="slider-ticks" aria-hidden="true">
+                            <span>90°S</span>
+                            <span>45°S</span>
+                            <span>Eq</span>
+                            <span>45°N</span>
+                            <span>90°N</span>
+                        </div>
+                    </div>
+
+                    <p id="latitude-display" class="helper-text" aria-live="polite">Latitude: —</p>
+                </section>
+
+                <!-- Magnitude Limit -->
+                <section class="control-section" aria-labelledby="mag-label">
+                    <div class="control-row control-row--spread">
+                        <label id="mag-label" class="control-label">Magnitude Limit</label>
+                        <output id="mag-display" class="time-display" aria-live="polite">4.5</output>
+                    </div>
+                    <input id="mag-slider" type="range" class="slider" min="1.0" max="6.5" step="0.5" value="4.5"
+                        aria-label="Maximum star magnitude to display" />
+                    <div class="slider-ticks" aria-hidden="true">
+                        <span>1 — brightest</span>
+                        <span>6.5 — faintest</span>
+                    </div>
+                </section>
+
+                <!-- Display Options -->
+                <section class="control-section" aria-labelledby="display-label">
+                    <span id="display-label" class="control-label">Display Options</span>
+
+                    <div class="toggle-row">
+                        <label class="toggle-label" for="constellation-toggle">
+                            Constellation Lines
+                        </label>
+                        <button id="constellation-toggle" role="switch" aria-checked="true"
+                            aria-label="Toggle constellation lines" class="toggle-switch" type="button">
+                            <span class="toggle-thumb" aria-hidden="true"></span>
+                        </button>
+                    </div>
+
+                    <div class="toggle-row">
+                        <label class="toggle-label" for="const-labels-toggle">
+                            Constellation Names
+                        </label>
+                        <button id="const-labels-toggle" role="switch" aria-checked="true"
+                            aria-label="Toggle constellation name labels" class="toggle-switch" type="button">
+                            <span class="toggle-thumb" aria-hidden="true"></span>
+                        </button>
+                    </div>
+
+                    <div class="toggle-row">
+                        <label class="toggle-label" for="labels-toggle">
+                            Star Labels
+                        </label>
+                        <button id="labels-toggle" role="switch" aria-checked="true" aria-label="Toggle star labels"
+                            class="toggle-switch" type="button">
+                            <span class="toggle-thumb" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </section>
+
+            </div><!-- /.controls-card -->
+        </aside>
+
+    </div><!-- /.app-layout -->
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
