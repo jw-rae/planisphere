@@ -75,17 +75,6 @@
                                 </button>
                                 <div id="theme-color-menu" class="theme-color-menu"></div>
                             </div>
-                            <!-- View mode toggle -->
-                            <div class="view-toggle" role="group" aria-label="View mode">
-                                <button id="view-planisphere-btn" class="view-btn view-btn--active" type="button"
-                                    aria-pressed="true" title="Planisphere view">
-                                    ◎
-                                </button>
-                                <button id="view-map-btn" class="view-btn" type="button" aria-pressed="false"
-                                    title="Map view">
-                                    ⊞
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </header>
@@ -217,6 +206,17 @@
 
             </div><!-- /.controls-card -->
         </aside>
+
+        <!-- View mode toggle — hidden until sphere view is ready -->
+        <div class="view-toggle-overlay" role="group" aria-label="View mode" style="display:none">
+            <button id="view-planisphere-btn" class="view-btn view-btn--active" type="button" aria-pressed="true"
+                title="Planisphere view" style="display:none">
+                ◎
+            </button>
+            <button id="view-map-btn" class="view-btn" type="button" aria-pressed="false" title="Map view">
+                ⊞
+            </button>
+        </div>
 
     </div><!-- /.app-layout -->
 

@@ -1013,6 +1013,20 @@ body {
     pointer-events: all;
 }
 
+/* ── Floating view-mode toggle (always visible, lives in .app-layout stacking context) ── */
+.view-toggle-overlay {
+    position: absolute;
+    bottom: var(--space-md);
+    right: var(--space-md);
+    z-index: 25;
+    /* above controls panel (20) */
+    display: flex;
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--border-radius-base);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
 .btn-icon {
     display: inline-flex;
     align-items: center;
