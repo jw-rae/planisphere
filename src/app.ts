@@ -11,6 +11,7 @@ import { TimeControl } from './ui/timeControl';
 import { LatitudeControl } from './ui/latitudeControl';
 import { ViewControl } from './ui/viewControl';
 import { MapZoom } from './ui/mapZoom';
+import { ThemeControl } from './ui/themeControl';
 
 export async function initApp(): Promise<void> {
     // Load sky data
@@ -30,6 +31,7 @@ export async function initApp(): Promise<void> {
     new LatitudeControl(skyState);
     new ViewControl(skyState);
     new MapZoom(skyState);
+    new ThemeControl();
 
     // ── Collapsible panel toggle ──────────────────────────────────────────────
     const panelToggleBtn = document.getElementById('panel-toggle-btn');

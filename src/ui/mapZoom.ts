@@ -19,6 +19,7 @@ export class MapZoom {
     private constLabelLayer: HTMLElement;
     private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
     private currentK = 1;
+    private locked = false; // true in sphere mode — blocks all user interaction
 
     constructor(store: SkyStateStore) {
         this.svg = document.getElementById('planisphere-svg') as unknown as SVGSVGElement;
@@ -28,10 +29,17 @@ export class MapZoom {
 
         this.zoom = d3
             .zoom<SVGSVGElement, unknown>()
-            .scaleExtent([1, 25])
+            .scaleExtent([1.8, 25])
+            // Bound panning to the SVG viewBox content — can't drag sky off screen
+            .translateExtent([[0, 0], [600, 600]])
             .filter((event) => {
+                // Block everything in sphere mode
+                if (this.locked) return false;
                 if (event.type === 'dblclick') return false;
                 if (event.button !== undefined && event.button !== 0) return false;
+                // Block drag/touch pan when at the minimum (reset-view) zoom —
+                // translateExtent alone isn't pixel-perfect at the floor scale
+                if ((event.type === 'mousedown' || event.type === 'touchstart') && this.currentK <= 1.81) return false;
                 return true;
             })
             .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
@@ -85,12 +93,12 @@ export class MapZoom {
     }
     private setMapMode(enabled: boolean): void {
         const sel = d3.select<SVGSVGElement, unknown>(this.svg);
-        // Zoom stays active in BOTH modes — sphere mode is just a circular mask
-        // applied via clip-path on the layers; the pan/zoom position is shared.
+        // Zoom behavior stays attached in both modes so programmatic transforms work.
+        // In sphere mode lock the filter so no user pan/zoom events get through.
+        this.locked = !enabled;
         sel.call(this.zoom);
         this.svg.classList.toggle('svg--pannable', enabled);
-        // Jump to the shared home position whenever switching views.
-        // Defer one rAF so layout is complete before we read dimensions.
+        // Always snap to home position when switching modes.
         requestAnimationFrame(() => this.jumpToInitialZoom());
     }
 

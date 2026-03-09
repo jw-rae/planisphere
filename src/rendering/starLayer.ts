@@ -30,14 +30,14 @@ export function magToRadius(mag: number): number {
  *   B−V 1–1.5  → orange      (K stars)
  *   B−V > 1.5  → red-orange  (M stars)
  */
-function bvToColor(bv: number): string {
-    if (bv < -0.3) return '#9bb0ff';
-    if (bv < 0.0) return '#aabfff';
-    if (bv < 0.3) return '#cad7ff';
-    if (bv < 0.6) return '#f8f7ff';
-    if (bv < 1.0) return '#fff4ea';
-    if (bv < 1.4) return '#ffd2a1';
-    return '#ffad51';
+function bvToClass(bv: number): string {
+    if (bv < -0.3) return 'star--blue';
+    if (bv < 0.0) return 'star--cold';
+    if (bv < 0.3) return 'star--white';
+    if (bv < 0.6) return 'star--cream';
+    if (bv < 1.0) return 'star--yellow';
+    if (bv < 1.4) return 'star--orange';
+    return 'star--red';
 }
 
 /**
@@ -105,7 +105,7 @@ export function renderStarLayer(
         circle.setAttribute('cx', x.toFixed(2));
         circle.setAttribute('cy', y.toFixed(2));
         circle.style.setProperty('--star-r', `${magToRadius(star.mag).toFixed(2)}px`);
-        circle.setAttribute('fill', bvToColor(star.bv));
+        circle.setAttribute('class', bvToClass(star.bv));
         starLayer.appendChild(circle);
 
         // Labels: place in the appropriate tier group

@@ -58,16 +58,34 @@
                             <h1 class="panel-title">Planisphere</h1>
                             <p class="panel-subtitle">Rotate to explore the night sky</p>
                         </div>
-                        <!-- View mode toggle -->
-                        <div class="view-toggle" role="group" aria-label="View mode">
-                            <button id="view-planisphere-btn" class="view-btn view-btn--active" type="button"
-                                aria-pressed="true" title="Planisphere view — original horizon circle">
-                                ◎
-                            </button>
-                            <button id="view-map-btn" class="view-btn" type="button" aria-pressed="false"
-                                title="Map view — full-screen zoomable sky map">
-                                ⊞
-                            </button>
+                        <div class="header-controls">
+                            <!-- Dark / light mode toggle -->
+                            <button id="theme-mode-btn" class="icon-btn" type="button"
+                                aria-label="Toggle theme"></button>
+                            <!-- Theme colour picker -->
+                            <div class="theme-picker-wrap">
+                                <button id="theme-picker-btn" class="icon-btn" type="button"
+                                    aria-label="Select accent colour" title="Select accent colour">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="3" />
+                                        <path
+                                            d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
+                                    </svg>
+                                </button>
+                                <div id="theme-color-menu" class="theme-color-menu"></div>
+                            </div>
+                            <!-- View mode toggle -->
+                            <div class="view-toggle" role="group" aria-label="View mode">
+                                <button id="view-planisphere-btn" class="view-btn view-btn--active" type="button"
+                                    aria-pressed="true" title="Planisphere view">
+                                    ◎
+                                </button>
+                                <button id="view-map-btn" class="view-btn" type="button" aria-pressed="false"
+                                    title="Map view">
+                                    ⊞
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </header>
