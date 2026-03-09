@@ -75,6 +75,12 @@ export class MapZoom {
         this.setMapMode(store.getState().viewMode === 'map');
     }
 
+    /** Re-apply current zoom level to label tiers after a re-render. */
+    syncTiers(): void {
+        this.updateLabelTiers(this.currentK);
+        this.updateConstLabelTiers(this.currentK);
+    }
+
     /** Show/hide label tier <g> elements based on current zoom level. */
     private updateLabelTiers(k: number): void {
         for (let i = 0; i < LABEL_TIERS.length; i++) {

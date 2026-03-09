@@ -14,8 +14,35 @@ import { MapZoom } from './ui/mapZoom';
 import { ThemeControl } from './ui/themeControl';
 
 export async function initApp(): Promise<void> {
+    // ── Loading overlay ───────────────────────────────────────────────────────
+    const loadingOverlay = document.getElementById('loading-overlay') as HTMLElement | null;
+
+    function dismissOverlay(): void {
+        if (!loadingOverlay) return;
+        loadingOverlay.classList.add('is-fading');
+        loadingOverlay.addEventListener('transitionend', () => loadingOverlay.remove(), { once: true });
+    }
+
+    function showError(message: string): void {
+        if (!loadingOverlay) return;
+        loadingOverlay.innerHTML = `
+            <div class="loading-error">
+                <span class="loading-error-icon" aria-hidden="true">✦</span>
+                <p class="loading-error-msg">${message}</p>
+                <button id="retry-btn" class="btn-secondary">Try again</button>
+            </div>`;
+        document.getElementById('retry-btn')?.addEventListener('click', () => window.location.reload());
+    }
+
     // Load sky data
-    const data = await loadSkyData();
+    let data: Awaited<ReturnType<typeof loadSkyData>>;
+    try {
+        data = await loadSkyData();
+    } catch (err) {
+        console.error('[planisphere] Failed to load sky data:', err);
+        showError('Could not load sky data. Check your connection and try again.');
+        return;
+    }
 
     // Mount renderer
     const svgEl = document.getElementById('planisphere-svg') as unknown as SVGSVGElement;
@@ -24,13 +51,14 @@ export async function initApp(): Promise<void> {
     // Subscribe renderer to state changes
     skyState.subscribe(() => {
         renderer.render(skyState.getState());
+        mapZoom.syncTiers();
     });
 
     // Mount UI controls
     new TimeControl(skyState);
     new LatitudeControl(skyState);
     new ViewControl(skyState);
-    new MapZoom(skyState);
+    const mapZoom = new MapZoom(skyState);
     new ThemeControl();
 
     // ── Collapsible panel toggle ──────────────────────────────────────────────
@@ -47,4 +75,8 @@ export async function initApp(): Promise<void> {
 
     // Initial render
     renderer.render(skyState.getState());
+    mapZoom.syncTiers();
+
+    // All ready — fade out and remove the loading overlay
+    dismissOverlay();
 }

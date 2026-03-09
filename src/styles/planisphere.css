@@ -41,6 +41,68 @@ body {
     line-height: var(--line-height-normal);
 }
 
+/* ── Loading Overlay ── */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    background: var(--sky-bg);
+    transition: opacity 0.4s ease;
+}
+
+.loading-overlay.is-fading {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(128, 128, 200, 0.18);
+    border-top-color: var(--color-brand-primary-400);
+    border-radius: 50%;
+    animation: spinner-spin 0.75s linear infinite;
+}
+
+@keyframes spinner-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: var(--color-brand-primary-300);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.loading-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    text-align: center;
+    max-width: 320px;
+    padding: var(--space-lg);
+}
+
+.loading-error-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.loading-error-msg {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+}
+
 /* ── Two-Panel Layout: sky fills everything, controls overlay on top ── */
 .app-layout {
     position: relative;
@@ -56,27 +118,18 @@ body {
 }
 
 @media (max-width: 768px) {
+
+    /* Keep right-side overlay on all screen sizes — just narrower on mobile.
+       The sky always fills 100% behind it; collapse/expand works the same way. */
     .controls-panel {
-        width: 100% !important;
-        right: 0;
-        left: 0;
-        top: auto;
-        bottom: 0;
-        height: auto;
-        max-height: 60dvh;
-        transform: none !important;
+        width: min(300px, 88vw);
     }
 
-    .app-layout.panel-collapsed .controls-panel {
-        transform: translateY(100%) !important;
-    }
-
-    .panel-toggle-btn {
-        left: auto;
-        right: var(--space-sm);
-        top: -44px;
-        border-right: 1px solid var(--color-border-primary);
-        border-radius: var(--border-radius-base);
+    .controls-card {
+        width: min(300px, 88vw);
+        padding: var(--space-xs) var(--space-sm);
+        gap: calc(var(--space-xs) / 2);
+        font-size: var(--font-size-sm);
     }
 }
 
@@ -520,7 +573,7 @@ body {
 
 .const-label[data-rank="1"] {
     fill: var(--color-brand-primary-200, var(--color-neutral-100));
-    font-size: calc(11px / var(--zoom-k, 1));
+    font-size: calc(9px / var(--zoom-k, 1));
     opacity: 0.8;
 }
 

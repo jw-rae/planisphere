@@ -52,14 +52,16 @@ function bvToClass(bv: number): string {
  */
 /**
  * Label magnitude thresholds per zoom tier.
- * Tier 0: always shown  → mag ≤ 2.5  (brightest named stars)
- * Tier 1: zoom ≥ 2.5×  → mag ≤ 3.5
- * Tier 2: zoom ≥ 5×    → mag ≤ 5.0
+ * Tier 0: always shown  → mag ≤ 1.5  (1st-magnitude stars, e.g. Sirius, Vega)
+ * Tier 1: zoom ≥ 2.2×  → mag ≤ 2.5  (2nd-magnitude brightest)
+ * Tier 2: zoom ≥ 3.5×  → mag ≤ 3.5
+ * Tier 3: zoom ≥ 6×    → mag ≤ 5.0
  */
 export const LABEL_TIERS: { maxMag: number; minZoom: number }[] = [
-    { maxMag: 2.5, minZoom: 0 },
-    { maxMag: 3.5, minZoom: 2.5 },
-    { maxMag: 5.0, minZoom: 5.0 },
+    { maxMag: 1.5, minZoom: 0 },
+    { maxMag: 2.5, minZoom: 2.2 },
+    { maxMag: 3.5, minZoom: 3.5 },
+    { maxMag: 5.0, minZoom: 6.0 },
 ];
 
 export function renderStarLayer(
@@ -110,12 +112,12 @@ export function renderStarLayer(
 
         // Labels: place in the appropriate tier group
         if (showLabels && star.name) {
-            for (let t = LABEL_TIERS.length - 1; t >= 0; t--) {
+            for (let t = 0; t < LABEL_TIERS.length; t++) {
                 if (star.mag <= LABEL_TIERS[t].maxMag) {
-                    const offset = magToRadius(star.mag) + 3;
+                    const offset = magToRadius(star.mag);
                     const text = document.createElementNS(SVG_NS, 'text');
                     text.setAttribute('x', (x + offset).toFixed(2));
-                    text.setAttribute('y', (y + 3).toFixed(2));
+                    text.setAttribute('y', (y + 0.5).toFixed(2));
                     text.setAttribute('class', 'star-label');
                     text.textContent = star.name;
                     tierGroups[t].appendChild(text);
