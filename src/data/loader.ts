@@ -94,7 +94,10 @@ export interface SkyData {
 
 // ── Loader ───────────────────────────────────────────
 
-const DATA_BASE = '/data';
+// import.meta.env.BASE_URL is injected by Vite and equals the configured base
+// (e.g. '/apps/planisphere/' in deploy builds, '/' in dev). Trailing slash is
+// guaranteed by Vite so we strip it before appending '/data'.
+const DATA_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
 
 export async function loadSkyData(): Promise<SkyData> {
     const [starsRaw, starnamesRaw, linesRaw, labelsRaw] = await Promise.all([

@@ -6,7 +6,10 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview"
+        "build:deploy": "tsc && vite build --base=/apps/planisphere/",
+        "deploy": "npm run build:deploy && node scripts/deploy.mjs",
+        "preview": "vite preview",
+        "preview:deploy": "vite preview --base=/apps/planisphere/"
     },
     "dependencies": {
         "@jwrae/design-tokens": "latest",
