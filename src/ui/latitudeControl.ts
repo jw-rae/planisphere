@@ -13,7 +13,6 @@ export class LatitudeControl {
     private manualLatRow: HTMLElement;
     private latSlider: HTMLInputElement;
     private latOutput: HTMLOutputElement;
-    private latDisplay: HTMLElement;
     private constellationToggle: HTMLButtonElement;
     private labelsToggle: HTMLButtonElement;
 
@@ -22,7 +21,6 @@ export class LatitudeControl {
         this.manualLatRow = document.getElementById('manual-lat-row') as HTMLElement;
         this.latSlider = document.getElementById('lat-slider') as HTMLInputElement;
         this.latOutput = document.getElementById('lat-output') as HTMLOutputElement;
-        this.latDisplay = document.getElementById('latitude-display') as HTMLElement;
         this.constellationToggle = document.getElementById('constellation-toggle') as HTMLButtonElement;
         this.labelsToggle = document.getElementById('labels-toggle') as HTMLButtonElement;
 
@@ -39,7 +37,6 @@ export class LatitudeControl {
         this.setToggleState(this.labelsToggle, state.showLabels);
         this.latSlider.value = String(state.latitude);
         this.renderLatOutput(state.latitude);
-        this.renderLatDisplay(state.latitude);
         this.setManualLatVisibility(!state.autoDetect);
     }
 
@@ -59,7 +56,6 @@ export class LatitudeControl {
         this.latSlider.addEventListener('input', () => {
             const lat = Number(this.latSlider.value);
             this.renderLatOutput(lat);
-            this.renderLatDisplay(lat);
             this.store.setState({ latitude: lat });
         });
 
@@ -76,11 +72,9 @@ export class LatitudeControl {
             this.store.setState({ showLabels: next });
         });
 
-        // Keep latitude display in sync when geolocation updates the state
+        // Keep slider in sync if geolocation updates the state
         this.store.subscribe(() => {
             const state = this.store.getState();
-            this.renderLatDisplay(state.latitude);
-            // Keep slider in sync if geolocation pushed a new value
             if (state.autoDetect) {
                 this.latSlider.value = String(state.latitude.toFixed(1));
                 this.renderLatOutput(state.latitude);
@@ -92,13 +86,11 @@ export class LatitudeControl {
 
     private requestGeolocation(): void {
         if (!navigator.geolocation) {
-            this.latDisplay.textContent = 'Geolocation not supported';
             this.store.setState({ autoDetect: false });
             this.setToggleState(this.autoToggle, false);
             this.setManualLatVisibility(true);
             return;
         }
-        this.latDisplay.textContent = 'Detecting…';
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const lat = pos.coords.latitude;
@@ -108,7 +100,6 @@ export class LatitudeControl {
                 this.renderLatOutput(lat);
             },
             () => {
-                this.latDisplay.textContent = 'Location unavailable';
                 this.store.setState({ autoDetect: false });
                 this.setToggleState(this.autoToggle, false);
                 this.setManualLatVisibility(true);
@@ -129,11 +120,6 @@ export class LatitudeControl {
         this.latOutput.value = `${Math.abs(lat).toFixed(1)}° ${hemi}`;
     }
 
-    /** Status line below the location section. */
-    private renderLatDisplay(lat: number): void {
-        const hemi = lat >= 0 ? 'N' : 'S';
-        this.latDisplay.textContent = `Latitude: ${Math.abs(lat).toFixed(1)}° ${hemi}`;
-    }
 
     private setToggleState(btn: HTMLButtonElement, on: boolean): void {
         btn.setAttribute('aria-checked', on ? 'true' : 'false');

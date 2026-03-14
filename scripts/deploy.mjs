@@ -15,7 +15,7 @@ const srcDir = resolve(__dirname, '..', 'dist');
 
 const dest = process.env.DEPLOY_DEST
     ? resolve(process.env.DEPLOY_DEST)
-    : resolve(__dirname, '..', '..', 'portfolio', 'public', 'apps', 'planisphere');
+    : resolve(__dirname, '..', '..', 'jwpro-frontend', 'public', 'apps', 'planisphere');
 
 if (!existsSync(srcDir)) {
     console.error('❌  dist/ not found — run build:deploy first');

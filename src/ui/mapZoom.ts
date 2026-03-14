@@ -37,9 +37,12 @@ export class MapZoom {
                 if (this.locked) return false;
                 if (event.type === 'dblclick') return false;
                 if (event.button !== undefined && event.button !== 0) return false;
-                // Block drag/touch pan when at the minimum (reset-view) zoom —
-                // translateExtent alone isn't pixel-perfect at the floor scale
-                if ((event.type === 'mousedown' || event.type === 'touchstart') && this.currentK <= 1.81) return false;
+                // Block single-touch pan and mouse drag at minimum zoom, but always
+                // allow multi-touch pinch-to-zoom (2+ fingers) so mobile users can
+                // zoom in from the initial view.
+                const isSingleTouchPan =
+                    event.type === 'touchstart' && (event.touches?.length ?? 1) < 2;
+                if ((event.type === 'mousedown' || isSingleTouchPan) && this.currentK <= 1.81) return false;
                 return true;
             })
             .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {

@@ -67,11 +67,26 @@ export async function initApp(): Promise<void> {
     const appLayout = document.querySelector('.app-layout') as HTMLElement;
 
     panelToggleBtn?.addEventListener('click', () => {
+        // Remove the attract animation the first time the user interacts
+        panelToggleBtn.classList.remove('panel-toggle-btn--attract');
         const isCollapsed = appLayout.classList.toggle('panel-collapsed');
         panelToggleBtn.textContent = isCollapsed ? '‹' : '›';
         panelToggleBtn.setAttribute('aria-label', isCollapsed ? 'Open controls panel' : 'Close controls panel');
         controlsPanel?.setAttribute('aria-hidden', String(isCollapsed));
     });
+
+    // On small screens, start with the panel collapsed and add a rainbow
+    // animation to the toggle button to draw the user's attention.
+    const MOBILE_BREAKPOINT = 640;
+    if (window.innerWidth < MOBILE_BREAKPOINT) {
+        appLayout.classList.add('panel-collapsed');
+        if (panelToggleBtn) {
+            panelToggleBtn.textContent = '‹';
+            panelToggleBtn.setAttribute('aria-label', 'Open controls panel');
+            panelToggleBtn.classList.add('panel-toggle-btn--attract');
+        }
+        controlsPanel?.setAttribute('aria-hidden', 'true');
+    }
 
     // Initial render
     renderer.render(skyState.getState());

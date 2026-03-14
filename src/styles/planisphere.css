@@ -157,6 +157,10 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
+    /* Prevent the browser from consuming touch events (scroll/pinch) so that
+       d3-zoom can handle all gestures directly on the SVG canvas. */
+    touch-action: none;
+    user-select: none;
 }
 
 /* ── Sphere overlay: a fixed-size circle that masks the area outside it.
@@ -208,13 +212,15 @@ body {
     /* overflow visible so the toggle-tab can peek out to the left */
     overflow: visible;
     transition: transform 0.25s ease;
-    /* Subtle shadow so panel reads above the sky */
+    border-left: 1px solid var(--color-border-primary);
     box-shadow: -4px 0 24px rgba(0, 0, 0, 0.6);
 }
 
 .controls-card {
     background: var(--color-surface-primary);
-    border-left: 1px solid var(--color-border-primary);
+    border-left: none;
+    position: relative;
+    z-index: 1;
     padding: var(--space-sm) var(--space-md);
     display: flex;
     flex-direction: column;
@@ -469,6 +475,19 @@ body {
     outline-offset: 3px;
 }
 
+/* Larger touch targets on mobile */
+@media (pointer: coarse) {
+    .slider {
+        height: 6px;
+    }
+
+    .slider::-webkit-slider-thumb {
+        width: 28px;
+        height: 28px;
+        border-width: 3px;
+    }
+}
+
 .slider-ticks {
     display: flex;
     justify-content: space-between;
@@ -550,7 +569,8 @@ body {
 .constellation-line {
     fill: none;
     stroke: var(--color-brand-primary-400, var(--color-neutral-600));
-    stroke-width: 0.8;
+    /* Counter-scale with zoom so lines stay the same visual weight on screen */
+    stroke-width: calc(1.8px / var(--zoom-k, 1));
     stroke-linecap: round;
     stroke-linejoin: round;
     opacity: 0.35;
@@ -560,7 +580,7 @@ body {
 .const-label {
     fill: var(--color-brand-primary-300, var(--color-neutral-200));
     font-family: var(--font-family-sans);
-    font-size: calc(9px / var(--zoom-k, 1));
+    font-size: calc(11px / var(--zoom-k, 1));
     font-weight: var(--font-weight-normal);
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -573,7 +593,7 @@ body {
 
 .const-label[data-rank="1"] {
     fill: var(--color-brand-primary-200, var(--color-neutral-100));
-    font-size: calc(9px / var(--zoom-k, 1));
+    font-size: calc(12px / var(--zoom-k, 1));
     opacity: 0.8;
 }
 
@@ -587,7 +607,7 @@ body {
     fill: var(--color-neutral-300);
     font-family: var(--font-family-sans);
     /* font-size is in SVG user units; dividing by --zoom-k keeps screen size constant */
-    font-size: calc(9px / var(--zoom-k, 1));
+    font-size: calc(11px / var(--zoom-k, 1));
     font-weight: var(--font-weight-normal);
     letter-spacing: 0.02em;
     pointer-events: none;
@@ -672,18 +692,18 @@ body {
 /* ── Panel toggle tab — attached to the left edge of the controls panel ── */
 .panel-toggle-btn {
     position: absolute;
-    left: -22px;
+    left: -30px;
     top: var(--space-lg, 24px);
     z-index: 50;
-    width: 22px;
-    height: 48px;
+    width: 30px;
+    height: 64px;
     background: var(--color-surface-primary);
     border: 1px solid var(--color-border-primary);
     border-right: none;
     border-radius: var(--border-radius-base) 0 0 var(--border-radius-base);
     color: var(--color-text-secondary);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 18px;
     line-height: 1;
     display: flex;
     align-items: center;
@@ -696,6 +716,57 @@ body {
 .panel-toggle-btn:hover {
     background: var(--color-surface-elevated);
     color: var(--color-text-primary);
+}
+
+/* Rainbow attract animation — shown on small screens until the user first
+   opens the panel, to draw attention to the toggle button. */
+@keyframes rainbow-attract {
+    0% {
+        border-color: hsl(0, 85%, 65%);
+        color: hsl(0, 85%, 65%);
+        box-shadow: -2px 0 8px hsl(0, 85%, 65%);
+    }
+
+    16% {
+        border-color: hsl(60, 85%, 58%);
+        color: hsl(60, 85%, 58%);
+        box-shadow: -2px 0 8px hsl(60, 85%, 58%);
+    }
+
+    33% {
+        border-color: hsl(120, 75%, 48%);
+        color: hsl(120, 75%, 48%);
+        box-shadow: -2px 0 8px hsl(120, 75%, 48%);
+    }
+
+    50% {
+        border-color: hsl(190, 80%, 50%);
+        color: hsl(190, 80%, 50%);
+        box-shadow: -2px 0 8px hsl(190, 80%, 50%);
+    }
+
+    66% {
+        border-color: hsl(240, 85%, 68%);
+        color: hsl(240, 85%, 68%);
+        box-shadow: -2px 0 8px hsl(240, 85%, 68%);
+    }
+
+    83% {
+        border-color: hsl(300, 80%, 62%);
+        color: hsl(300, 80%, 62%);
+        box-shadow: -2px 0 8px hsl(300, 80%, 62%);
+    }
+
+    100% {
+        border-color: hsl(0, 85%, 65%);
+        color: hsl(0, 85%, 65%);
+        box-shadow: -2px 0 8px hsl(0, 85%, 65%);
+    }
+}
+
+.panel-toggle-btn--attract {
+    border-width: 2px;
+    animation: rainbow-attract 1.8s linear infinite;
 }
 
 .panel-toggle-btn:focus-visible {
